@@ -1,4 +1,4 @@
-﻿namespace Files.Api.Aws.Models;
+﻿namespace Files.Api.Models;
 
 public class AwsSettingsModel
 {
@@ -7,4 +7,8 @@ public class AwsSettingsModel
     public string Region { get; set; }
     public string BucketName { get; set; }
     public string QueueFileUrl { get; set; }
+    public string UserPoolId { get; set; }
+    public string AppClientId { get; set; }
+    public string LogGroup { get; set; }
+    public string LogStream{ get; set; }
 }

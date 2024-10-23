@@ -1,4 +1,4 @@
-﻿namespace Files.Api.Aws.Models;
+﻿namespace Files.Api.Models;
 
 public class MessageModel
 {

@@ -2,6 +2,6 @@
 
 public interface IS3Consumer
 {
-    Task<string> Upload(IFormFile file, string keyName);
-    Task<string> GetFile(string fileUrl);
+    Task<string> UploadAsync(IFormFile file, string keyName);
+    Task<string> GetFileAsync(string fileUrl);
 }

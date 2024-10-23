@@ -2,6 +2,6 @@
 
 public interface ISqsConsumer
 {
-    Task<Object> GetMessage(IS3Consumer s3Consumer);
-    Task<bool> SendMessage(string message);
+    Task<Object> GetMessageAsync(IS3Consumer s3Consumer);
+    Task<bool> SendMessageAsync(string message);
 }

@@ -2,7 +2,7 @@
 using Amazon.SQS;
 using Amazon.SQS.Model;
 using Files.Api.Aws.Interfaces;
-using Files.Api.Aws.Models;
+using Files.Api.Models;
 using System.Net;
 using System.Text.Json;
 
@@ -12,35 +12,53 @@ public class SqsConsumer : ISqsConsumer
 {
     private readonly IAmazonSQS _amazonSQS;
     private readonly string _queueUrl;
+    private readonly IAwsLogger _logger;
 
-    public SqsConsumer(IConfiguration configuration)
+    public SqsConsumer(IConfiguration configuration, IAwsLogger logger)
     {
         var awsSettings = configuration.GetSection("AWS").Get<AwsSettingsModel>();
         _amazonSQS = new AmazonSQSClient(new BasicAWSCredentials(awsSettings.AccessKey, awsSettings.SecretKey), Amazon.RegionEndpoint.GetBySystemName(awsSettings.Region));
         _queueUrl = awsSettings.QueueFileUrl;
+        _logger = logger;
     }
-    public async Task<Object> GetMessage(IS3Consumer s3Consumer)
+    public async Task<Object> GetMessageAsync(IS3Consumer s3Consumer)
     {
-        var response = await _amazonSQS.ReceiveMessageAsync(new ReceiveMessageRequest
+        try
         {
-            QueueUrl = _queueUrl,
-            MaxNumberOfMessages = 1,
-            WaitTimeSeconds = 20
-        });
+            var response = await _amazonSQS.ReceiveMessageAsync(new ReceiveMessageRequest
+            {
+                QueueUrl = _queueUrl,
+                MaxNumberOfMessages = 1,
+                WaitTimeSeconds = 20
+            });
 
-        var message = response.Messages.FirstOrDefault();
-        if (message == null) return null;
+            var message = response.Messages.FirstOrDefault();
+            if (message == null) return null;
 
-        var body = JsonSerializer.Deserialize<MessageModel>(message.Body);
-        var file = s3Consumer.GetFile(body.FileUrl);
-        await _amazonSQS.DeleteMessageAsync(_queueUrl, message.ReceiptHandle);
+            var body = JsonSerializer.Deserialize<MessageModel>(message.Body);
+            var file = s3Consumer.GetFileAsync(body.FileUrl);
+            await _amazonSQS.DeleteMessageAsync(_queueUrl, message.ReceiptHandle);
 
-        return response;
+            return response;
+        }
+        catch (Exception ex)
+        {
+            await _logger.Error(ex.Message, "GetMessageAsync");
+            return null;
+        }     
     }
 
-    public async Task<bool> SendMessage(string message)
+    public async Task<bool> SendMessageAsync(string message)
     {
-        var sended = await _amazonSQS.SendMessageAsync(_queueUrl, message);
-        return sended.HttpStatusCode == HttpStatusCode.OK;
+        try
+        {
+            var sended = await _amazonSQS.SendMessageAsync(_queueUrl, message);
+            return sended.HttpStatusCode == HttpStatusCode.OK;
+        }
+        catch (Exception ex)
+        {
+            await _logger.Error(ex.Message, "SendMessageAsync");
+            return false;
+        }
     }
 }
