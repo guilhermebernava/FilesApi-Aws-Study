@@ -1,7 +1,10 @@
 using Files.Api.Injections;
 var builder = WebApplication.CreateBuilder(args);
 
-builder.Configuration.AddJsonFile("appsettings.json", optional: true, reloadOnChange: true);
+builder.Configuration
+    .AddJsonFile("appsettings.json", optional: true, reloadOnChange: true)
+    .AddJsonFile("appsettings.prod.json", optional: true, reloadOnChange: true)
+    .AddEnvironmentVariables();
 
 
 builder.Services.AddEndpointsApiExplorer();
